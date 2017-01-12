@@ -1,21 +1,9 @@
 class Hash
-  def fetch_deeper(curr, result)
-    result = if result.is_a?(Array)
-               result.fetch(curr.to_i)
-             else
-               result = result.fetch(curr.to_sym) { result.fetch(curr, nil) }
-             end
-  end
-
   def fetch_deep(path)
-    current_hash = self
-    path_keys_array = path.split('.')
-    until path_keys_array.empty?
-      current_key = path_keys_array.shift
-      current_hash = fetch_deeper(current_key, current_hash)
-      return nil if current_hash == nil
-    end
-    current_hash
+    key, lasting_path = path.split('.', 2)
+    value = self[key.to_sym] || self[key.to_s]
+    return value unless lasting_path
+    value.fetch_deep(lasting_path) if value
   end
 
   def reshape(shape_hash)
@@ -28,5 +16,10 @@ class Array
   def reshape(shape_hash)
     map! { |element| element.reshape(shape_hash) }
   end
-end
 
+  def fetch_deep(path)
+    key, lasting_path = path.split('.', 2)
+    element = self[key.to_i]
+    element.fetch_deep(lasting_path) if element
+  end
+end
