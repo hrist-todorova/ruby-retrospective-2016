@@ -1,13 +1,13 @@
-def from_celsius(degrees, to_unit)
-  case to_unit
+def from_celsius(degrees, unit)
+  case unit
   when 'C' then degrees
   when 'K' then degrees + 273.15
-  when 'F' then degrees * 1.8 + 32
+  when 'F' then (degrees * 1.8) + 32
   end
 end
 
-def to_celsius(degrees, from_unit)
-  case from_unit
+def to_celsius(degrees, unit)
+  case unit
   when 'C' then degrees
   when 'K' then degrees - 273.15
   when 'F' then (degrees - 32) / 1.8
@@ -15,22 +15,35 @@ def to_celsius(degrees, from_unit)
 end
 
 def convert_between_temperature_units(degrees, input_unit, output_unit)
-  degrees_in_celsius = degrees_to_celsius(degrees, input_unit)
-  degrees_from_celsius(degrees_in_celsius, output_unit)
+  return degrees if input_unit == output_unit
+
+  case input_unit
+  when 'C' then from_celsius(degrees, output_unit)
+  when 'K' then from_celsius(to_celsius(degrees, 'K'), output_unit)
+  when 'F' then from_celsius(to_celsius(degrees, 'F'), output_unit)
+  end
 end
 
-SUBSTANCES = {
-  'water'   => { melting_point: 0, boiling_point: 100 },
-  'ethanol' => { melting_point: -114, boiling_point: 78.37 },
-  'gold'    => { melting_point: 1_064, boiling_point: 2_700 },
-  'silver'  => { melting_point: 961.8, boiling_point: 2_162 },
-  'copper'  => { melting_point: 1_085, boiling_point: 2_567 },
+MELTNG_POINTS = {
+  'water' => 0,
+  'ethanol' => -114,
+  'gold' => 1064,
+  'silver' => 961.8,
+  'copper' => 1085
+}
+
+BOILING_POINS = {
+  'water' => 100,
+  'ethanol' => 78.37,
+  'gold' => 2700,
+  'silver' => 2162,
+  'copper' => 2567
 }
 
 def melting_point_of_substance(substance, unit)
-  degrees_from_celsius(SUBSTANCES[substance][:melting_point], unit)
+  convert_between_temperature_units(MELTNG_POINTS[substance], 'C', unit)
 end
 
 def boiling_point_of_substance(substance, unit)
-  degrees_from_celsius(SUBSTANCES[substance][:boiling_point], unit)
+  convert_between_temperature_units(BOILING_POINS[substance], 'C', unit)
 end
