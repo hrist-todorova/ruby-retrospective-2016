@@ -9,14 +9,7 @@ RSpec.describe 'Version' do
       expect(Version.new('2.0.0.1')).to eq '2.0.0.1'
     end
 
-    it 'correctly describes the error if not valid' do
-      expect { Version.new('1.2.wat') }.to raise_error(
-        ArgumentError,
-        "Invalid version string '1.2.wat'"
-      )
-    end
-
-    it 'accepts empty string as argument' do
+    it 'accepts the empty string as argument' do
       expect(Version.new('')).to eq '0'
     end
 
@@ -25,24 +18,29 @@ RSpec.describe 'Version' do
     end
 
     context 'raises error for invalid input' do
-      it 'has too much points' do
+      it 'correctly describes the error with not valid input' do
+        expect { Version.new('1.2.string') }.to raise_error(
+          ArgumentError,
+          "Invalid version string '1.2.string'"
+        )
+      end
+
+      it 'raises error when the argument has incorect number of points' do
         expect { Version.new('.3') }.to raise_error(ArgumentError)
         expect { Version.new('....3') }.to raise_error(ArgumentError)
         expect { Version.new('0..3') }.to raise_error(ArgumentError)
-        expect { Version.new('0.12...3') }.to raise_error(ArgumentError)
         expect { Version.new('1.3.5.') }.to raise_error(ArgumentError)
-        expect { Version.new('1...3...5') }.to raise_error(ArgumentError)
         expect { Version.new('1...') }.to raise_error(ArgumentError)
       end
 
-      it 'has other symbols included' do
+      it 'raises error when the argument has other symbols than points and digits' do
         expect { Version.new('2,1,3') }.to raise_error(ArgumentError)
         expect { Version.new('2-3-1') }.to raise_error(ArgumentError)
         expect { Version.new('2.3,1') }.to raise_error(ArgumentError)
         expect { Version.new('2*3') }.to raise_error(ArgumentError)
       end
 
-      it 'has negative number' do
+      it 'raises error when the argument has negative numbers' do
         expect { Version.new('-1') }.to raise_error(ArgumentError)
         expect { Version.new('-12332.23') }.to raise_error(ArgumentError)
       end
@@ -71,14 +69,7 @@ RSpec.describe 'Version' do
       expect(Version.new('2.22.0.3')).to be > Version.new('1.23.0.2')
     end
 
-    it 'compares correctly two versions' do
-      expect(Version.new('1.0.1') < Version.new('1.1.0')).to be true
-      expect(Version.new('1.2.3') < Version.new('1.3.1')).to be true
-      expect(Version.new('1.2.3') < Version.new('1.3')).to be true
-      expect(Version.new('1.2.3') < Version.new('1')).to be false
-      expect(Version.new('1') > Version.new('1.1')).to be false
-      expect(Version.new('1.22.3') <= Version.new('1.22.4')).to be true
-      expect(Version.new('1.22.0.0') >= Version.new('1.22')).to be true
+    it 'correctly uses operator ==' do
       expect(Version.new('1.1.0') == Version.new('1.1')).to be true
       expect(Version.new('0.1') == Version.new('1')).to be false
       expect(Version.new('1') == Version.new('1.0.0.0.0')).to be true
@@ -138,6 +129,18 @@ RSpec.describe 'Version' do
     end
 
     describe '#to_a' do
+      it 'contains the first version' do
+        range = Version::Range.new(Version.new('1.2.3'), Version.new('2.3.4'))
+        array = range.to_a
+        expect(array.first).to eq('1.2.3')
+      end
+      it 'doesnt contain the last version' do
+        range = Version::Range.new(Version.new('1.2.3'), Version.new('2.3.4'))
+        array = range.to_a
+        expect(array.last).to_not eq('2.3.4')
+        expect(array.last).to eq('2.3.3')
+      end
+
       it 'generates all versions' do
         result = ['1.1', '1.1.1', '1.1.2', '1.1.3', '1.1.4', '1.1.5', '1.1.6']
         expect(Version::Range.new('1.1.0', '1.1.7').to_a).to eq result
