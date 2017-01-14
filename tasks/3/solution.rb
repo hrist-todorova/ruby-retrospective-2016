@@ -45,7 +45,7 @@ class CommandParser
   def initialize(command_name)
     @command_name = command_name
     @arguments = []
-    @current_argument = 0
+    @arguments_count = 0
     @options = []
   end
 
@@ -53,16 +53,28 @@ class CommandParser
     string[0] == '-'
   end
 
-  def parse(command_runner, argv)
-    argv.each do |elem|
-      if option?(elem) && @options.index { |x| x.named_like?(elem) } != nil
+  def handle_arguments(command_runner, arguments_array)
+    arguments_array.each do |elem|
+      @arguments[@arguments_count].block.call(command_runner, elem)
+      @arguments_count += 1
+    end
+  end
+
+  def handle_arguments_with_option(command_runner, arguments_array)
+    arguments_array.each do |elem|
+      if @options.index { |x| x.named_like?(elem) }
         i = @options.index { |x| x.named_like?(elem) }
         @options[i].block.call(command_runner, @options[i].get_param(elem))
-      elsif !option?(elem)
-        @arguments[@current_argument].block.call(command_runner, elem)
-        @current_argument += 1
       end
     end
+  end
+
+  def parse(command_runner, argv)
+    arguments_with_option = argv.select { |x| option?(x) }
+    arguments = argv - arguments_with_option
+
+    handle_arguments(command_runner, arguments)
+    handle_arguments_with_option(command_runner, arguments_with_option)
   end
 
   def argument(name, &block)
