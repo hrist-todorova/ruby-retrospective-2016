@@ -9,6 +9,13 @@ RSpec.describe 'Version' do
       expect(Version.new('2.0.0.1')).to eq '2.0.0.1'
     end
 
+    it 'correctly describes the error if not valid' do
+      expect { Version.new('1.2.wat') }.to raise_error(
+        ArgumentError,
+        "Invalid version string '1.2.wat'"
+      )
+    end
+
     it 'accepts empty string as argument' do
       expect(Version.new('')).to eq '0'
     end
@@ -43,6 +50,27 @@ RSpec.describe 'Version' do
   end
 
   describe 'comparing versions' do
+    it 'compares simple inequalities' do
+      expect(Version.new('1')    ).to be > Version.new('0')
+      expect(Version.new('0.1')  ).to be > Version.new('0')
+      expect(Version.new('0.0.1')).to be > Version.new('0')
+      expect(Version.new('0')    ).to_not be > Version.new('0.0.1')
+
+      expect(Version.new('1')    ).to be < Version.new('1.0.1')
+      expect(Version.new('1.1')  ).to be < Version.new('1.1.1')
+      expect(Version.new('11.3') ).to be < Version.new('11.3.1')
+      expect(Version.new('1.0.1')).to_not be < Version.new('1')
+
+      expect(Version.new('1.23')).to be > Version.new('1.22')
+      expect(Version.new('1.23')).to be > Version.new('1.4')
+
+      expect(Version.new('1.23.3')).to be > Version.new('1.4.8')
+      expect(Version.new('1.22.3')).to be < Version.new('1.23.2')
+
+      expect(Version.new('1.22.0.3')).to be < Version.new('1.23.0.2')
+      expect(Version.new('2.22.0.3')).to be > Version.new('1.23.0.2')
+    end
+
     it 'compares correctly two versions' do
       expect(Version.new('1.0.1') < Version.new('1.1.0')).to be true
       expect(Version.new('1.2.3') < Version.new('1.3.1')).to be true
@@ -55,6 +83,16 @@ RSpec.describe 'Version' do
       expect(Version.new('0.1') == Version.new('1')).to be false
       expect(Version.new('1') == Version.new('1.0.0.0.0')).to be true
       expect(Version.new('1') <=> Version.new('2')).to eq -1
+    end
+
+    it 'implements <= and >=' do
+      expect(Version.new('1.23')).to be >= Version.new('1.22')
+      expect(Version.new('1.23')).to be >= Version.new('1.23')
+      expect(Version.new('1.23')).to_not be >= Version.new('1.24')
+
+      expect(Version.new('1.23')).to be <= Version.new('1.24')
+      expect(Version.new('1.23')).to be <= Version.new('1.23')
+      expect(Version.new('1.23')).to_not be <= Version.new('1.21')
     end
   end
 
@@ -94,6 +132,7 @@ RSpec.describe 'Version' do
         expect(object.include?(Version.new('1.9'))).to be true
         expect(object.include?(Version.new('2'))).to be false
         expect(object.include?(Version.new('1'))).to be true
+        expect(object.include?(Version.new('0.9'))).to be false
         expect(object.include?(Version.new('1.6.8'))).to be true
       end
     end
